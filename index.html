@@ -158,29 +158,59 @@ html, body {
   background: var(--term-bg);
   text-align:center;
   font-family: var(--font-mono);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-#title-border {
-  font-size: clamp(0.5rem, 1.2vw, 0.75rem);
-  color: var(--term-green-dim);
-  line-height: 1.2;
-  white-space: pre;
-  opacity:0;
-  transition: opacity 0.8s ease;
+.title-container {
+  position:relative;
+  padding: 1.5rem 1rem;
+  border: 1px solid rgba(0,255,65,0.15);
+  max-width: min(90vw, 640px);
+  width: 100%;
+  margin: 0 auto;
 }
-#title-border.show { opacity:0.15; }
+.title-container::before {
+  content: '┌─────────────────────────────────────────────────────────┐';
+  position:absolute;
+  top: -0.55rem; left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.35rem, 1vw, 0.6rem);
+  color: var(--term-green-dim);
+  white-space: pre;
+  opacity:0.15;
+  pointer-events:none;
+  display:none;
+}
+.title-container::after {
+  content: '└─────────────────────────────────────────────────────────┘';
+  position:absolute;
+  bottom: -0.55rem; left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.35rem, 1vw, 0.6rem);
+  color: var(--term-green-dim);
+  white-space: pre;
+  opacity:0.15;
+  pointer-events:none;
+  display:none;
+}
 
 .term-title {
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: clamp(1.6rem, 7vw, 4.5rem);
-  letter-spacing: 0.15em;
+  font-size: clamp(1.4rem, 6vw, 4.5rem);
+  letter-spacing: 0.12em;
   color: var(--term-green);
   text-shadow:
     0 0 10px rgba(0,255,65,0.3),
     0 0 30px rgba(0,255,65,0.1);
-  line-height: 1.2;
-  margin: 0.5rem 0;
+  line-height: 1.3;
+  margin: 0.3rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em;
 }
 .term-title .word { display: inline-block; }
 
@@ -228,6 +258,16 @@ html, body {
   transition: opacity 0.8s ease 2s;
 }
 .term-date.show { opacity:0.5; }
+
+.term-sound-hint {
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 1.1vw, 0.65rem);
+  color: rgba(0,255,65,0.35);
+  margin-top: 0.4rem;
+  opacity:0;
+  transition: opacity 1s ease 3s;
+}
+.term-sound-hint.show { opacity:0.4; }
 
 .term-click-hint {
   font-family: var(--font-mono);
@@ -533,8 +573,13 @@ html, body {
 /* ══════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════ */
-@media (max-width: 600px) {
-  .term-title { letter-spacing: 0.1em; }
+@media (max-width: 768px) {
+  .title-container { padding: 1.2rem 0.8rem; }
+  .term-title { font-size: clamp(1.2rem, 5vw, 2.2rem); letter-spacing: 0.08em; gap: 0.2em; }
+  .term-subtitle { font-size: clamp(0.5rem, 1.3vw, 0.7rem); }
+  .term-date { font-size: clamp(0.45rem, 1.1vw, 0.65rem); }
+  .term-sound-hint { font-size: clamp(0.4rem, 1vw, 0.55rem); }
+  .term-click-hint { font-size: clamp(0.6rem, 1.3vw, 0.8rem); margin-top: 1.5rem; padding:0.5rem 1.2rem; }
   .light-message { white-space: normal; max-width: 200px; font-size: 0.75rem; }
   #boot-text { font-size: 0.65rem; }
   #signal-bar-label { font-size: 0.65rem; }
@@ -542,7 +587,20 @@ html, body {
   .fairy-light .glow { width: 32px; height: 32px; margin-left: -16px; margin-top: -16px; }
   .fairy-light .light-body { width: 11px; height: 16px; margin-left: -5.5px; margin-top: -8px; }
   .fairy-light .light-cap { margin-top: 6px; }
-  #title-border { font-size: 0.4rem; }
+}
+
+@media (max-width: 400px) {
+  .term-title { font-size: clamp(1rem, 4.5vw, 1.4rem); letter-spacing: 0.05em; gap: 0.15em; }
+  .term-subtitle { font-size: 0.45rem; letter-spacing: 0.15em; }
+  .term-date { font-size: 0.4rem; }
+  .term-click-hint { font-size: 0.55rem; padding:0.4rem 0.8rem; margin-top: 1rem; }
+  .title-container { padding: 1rem 0.5rem; }
+  #boot-text { font-size: 0.55rem; }
+  #boot-prompt { font-size: 0.55rem; }
+}
+
+@media (max-width: 600px) {
+  .term-title { letter-spacing: 0.1em; }
 }
 
 .glitch-overlay {
@@ -578,17 +636,14 @@ html, body {
 <!-- ═══════ SCREEN 2 — TITLE ═══════ -->
 <div id="screen-title" class="screen">
   <div class="title-container">
-    <pre id="title-border">┌─────────────────────────────────────────────────────────┐</pre>
     <h1 class="term-title">
       <span class="word"><span class="term-letter">H</span><span class="term-letter">A</span><span class="term-letter">P</span><span class="term-letter">P</span><span class="term-letter">Y</span></span>
-      &nbsp;
       <span class="word"><span class="term-letter">B</span><span class="term-letter">I</span><span class="term-letter">R</span><span class="term-letter">T</span><span class="term-letter">H</span><span class="term-letter">D</span><span class="term-letter">A</span><span class="term-letter">Y</span></span>
-      &nbsp;
       <span class="word"><span class="term-letter">S</span><span class="term-letter">O</span><span class="term-letter">P</span><span class="term-letter">H</span><span class="term-letter">I</span><span class="term-letter">E</span></span>
     </h1>
-    <pre id="title-border" style="margin-top:0.3rem;">└─────────────────────────────────────────────────────────┘</pre>
     <p class="term-subtitle">✦ BIRTHDAY EDITION ✦</p>
     <p class="term-date">01. JUNI 2026 // SIGNAL ESTABLISHED</p>
+    <p class="term-sound-hint">🔊 Ton an für beste Erfahrung</p>
     <p class="term-click-hint"><span class="blink">▌</span> In die Welt eintreten...</p>
   </div>
 </div>
@@ -687,7 +742,7 @@ const titleLetters = $$('.term-letter');
 const subtitle = $('.term-subtitle');
 const termDate = $('.term-date');
 const clickHint = $('.term-click-hint');
-const titleBorder = $$('#title-border');
+const soundHint = $('.term-sound-hint');
 const lightsContainer = $('#lights-container');
 const progress = $('#progress');
 const progressCount = progress.querySelector('.count');
@@ -810,78 +865,8 @@ function startBackgroundMusic() {
   drone3.connect(filter);
   filter.connect(drone1Gain);
 
-  // ── Sparse melodic notes (creepy whole tone / minor scale) ──
-  const creepyNotes = [
-    261.63, 277.18, 293.66, 311.13, 349.23, 369.99, 415.30, 440,
-    523.25, 554.37, 587.33, 622.25, 698.46, 739.99, 830.61, 880
-  ];
-
-  function scheduleMelody() {
-    if (currentScreen === 'final') {
-      // On final screen, play happier notes
-      const happyNotes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 1046.5];
-      const freq = happyNotes[Math.floor(Math.random() * happyNotes.length)];
-      const noteGain = audioCtx.createGain();
-      const osc = audioCtx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
-      noteGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.5);
-      noteGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3);
-      osc.connect(noteGain);
-      noteGain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 3.5);
-      const delay = 2000 + Math.random() * 3000;
-      setTimeout(scheduleMelody, delay);
-      return;
-    }
-
-    // Creepy mode: play random notes from the creepy scale
-    const freq = creepyNotes[Math.floor(Math.random() * creepyNotes.length)];
-    const now = audioCtx.currentTime;
-    const delaySec = 2 + Math.random() * 4;
-    const startTime = now + delaySec;
-
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, startTime);
-
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.025, startTime + 0.4);
-    gain.gain.linearRampToValueAtTime(0, startTime + 2.5);
-
-    // Random slight detune for eeriness
-    if (Math.random() < 0.3) {
-      osc.frequency.linearRampToValueAtTime(freq * (1 + (Math.random()-0.5)*0.02), startTime + 1.5);
-    }
-
-    // Sometimes play a two-note chord
-    if (Math.random() < 0.2) {
-      setTimeout(() => {
-        const osc2 = audioCtx.createOscillator();
-        osc2.type = 'sine';
-        const freq2 = creepyNotes[Math.floor(Math.random() * creepyNotes.length)];
-        osc2.frequency.setValueAtTime(freq2, audioCtx.currentTime);
-        const gain2 = audioCtx.createGain();
-        gain2.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain2.gain.linearRampToValueAtTime(0.015, audioCtx.currentTime + 0.5);
-        gain2.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.start();
-        osc2.stop(audioCtx.currentTime + 2.5);
-      }, (delaySec + 0.3) * 1000);
-    }
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(startTime);
-    osc.stop(startTime + 3);
-
-    setTimeout(scheduleMelody, delaySec * 1000);
-  }
+  // ── Drone only — no melody, just pure bass ──
+  // No scheduled notes, only the continuous low drones above
 
   // Start nodes
   drone1.start();
@@ -890,8 +875,7 @@ function startBackgroundMusic() {
   lfo.start();
   filterLfo.start();
 
-  // Start melody after a short delay
-  setTimeout(scheduleMelody, 2000);
+  // No melody starter — drone only
 
   // Store references for cleanup
   bgMusicNodes = [drone1, drone2, drone3, lfo, filterLfo];
@@ -1068,8 +1052,6 @@ function transitionToTitle() {
 
 // ─── TITLE SCREEN ───
 function animateTitle() {
-  titleBorder.forEach(el => el.classList.add('show'));
-
   titleLetters.forEach((letter, i) => {
     setTimeout(() => {
       letter.classList.add('show');
@@ -1086,6 +1068,7 @@ function animateTitle() {
   const totalDelay = 200 + titleLetters.length * 100;
   setTimeout(() => subtitle.classList.add('show'), totalDelay + 300);
   setTimeout(() => termDate.classList.add('show'), totalDelay + 600);
+  setTimeout(() => soundHint.classList.add('show'), totalDelay + 800);
   setTimeout(() => clickHint.classList.add('show'), totalDelay + 900);
 
   function goToGame(e) {
