@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HAPPY BIRTHDAY SOPHIE</title>
+<style>
+/* ══════════════════════════════════════════════
+   BASE & RESET — TERMINAL EDITION
+   ══════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --term-green: #00ff41;
+  --term-green-dim: #00cc33;
+  --term-green-dark: #003300;
+  --term-bg: #050508;
+  --text-dim: rgba(0,255,65,0.4);
+  --text-mid: rgba(0,255,65,0.7);
+  --font-mono: 'Courier New', 'Consolas', 'Lucida Console', monospace;
+  --gold: #ffc857;
+}
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  background: var(--term-bg);
+  color: var(--term-green);
+  font-family: var(--font-mono);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+/* ══════════════════════════════════════════════
+   CRT OVERLAY
+   ══════════════════════════════════════════════ */
+#crt-overlay {
+  position:fixed; inset:0; pointer-events:none; z-index:999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.04) 0px,
+    rgba(0,0,0,0.04) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+#crt-overlay::after {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+  pointer-events:none;
+}
+
+/* ══════════════════════════════════════════════
+   SCREENS
+   ══════════════════════════════════════════════ */
+.screen {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden;
+  transition: opacity 1.2s ease, visibility 1.2s ease;
+  flex-direction:column;
+  padding:1.5rem;
+}
+.screen.active {
+  opacity:1; visibility:visible;
+}
+
+/* ══════════════════════════════════════════════
+   SCREEN 1 — BOOT
+   ══════════════════════════════════════════════ */
+#screen-boot {
+  background: var(--term-bg);
+  font-family: var(--font-mono);
+  justify-content:flex-start;
+  padding-top:12vh;
+}
+#boot-text {
+  font-size: clamp(0.75rem, 2.2vw, 1.1rem);
+  color: var(--term-green);
+  line-height: 1.8;
+  max-width: 44rem;
+  width:100%;
+  text-shadow: 0 0 8px rgba(0,255,65,0.25);
+}
+#boot-text .line { opacity:0; }
+#boot-text .line.visible { opacity:1; }
+
+/* Signal Strength Bar — inline in boot-text */
+#signal-bar-container {
+  width:100%;
+  margin: 3px 0 3px 0;
+  display:none;
+}
+#signal-bar-label {
+  font-size: clamp(0.75rem, 2.2vw, 1.1rem);
+  color: var(--term-green);
+  text-shadow: 0 0 8px rgba(0,255,65,0.25);
+  line-height: 1.8;
+}
+#signal-bar-track {
+  width:100%;
+  height: 18px;
+  background: rgba(0,255,65,0.08);
+  border: 1px solid rgba(0,255,65,0.25);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 2px;
+}
+#signal-bar-fill {
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, rgba(0,255,65,0.4), var(--term-green));
+  box-shadow: 0 0 12px rgba(0,255,65,0.3);
+  transition: width 0.15s linear;
+  position: relative;
+}
+#signal-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.6));
+}
+#signal-bar-pct {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7em;
+  color: #000;
+  font-weight: bold;
+  font-family: var(--font-mono);
+  mix-blend-mode: difference;
+}
+
+#boot-prompt {
+  color: var(--term-green);
+  font-size: clamp(0.75rem, 2.2vw, 1.1rem);
+  margin-top: 1.5rem;
+  opacity:0;
+  transition: opacity 0.8s ease;
+  cursor: pointer;
+  padding:0.5rem 1rem;
+  border:1px solid transparent;
+}
+#boot-prompt.show { opacity:0.9; }
+#boot-prompt:hover { border-color:rgba(0,255,65,0.3); }
+#boot-prompt .blink { animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+/* ══════════════════════════════════════════════
+   SCREEN 2 — TITLE (Terminal Style)
+   ══════════════════════════════════════════════ */
+#screen-title {
+  background: var(--term-bg);
+  text-align:center;
+  font-family: var(--font-mono);
+}
+
+#title-border {
+  font-size: clamp(0.5rem, 1.2vw, 0.75rem);
+  color: var(--term-green-dim);
+  line-height: 1.2;
+  white-space: pre;
+  opacity:0;
+  transition: opacity 0.8s ease;
+}
+#title-border.show { opacity:0.15; }
+
+.term-title {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 7vw, 4.5rem);
+  letter-spacing: 0.15em;
+  color: var(--term-green);
+  text-shadow:
+    0 0 10px rgba(0,255,65,0.3),
+    0 0 30px rgba(0,255,65,0.1);
+  line-height: 1.2;
+  margin: 0.5rem 0;
+}
+.term-title .word { display: inline-block; }
+
+.term-letter {
+  display:inline-block;
+  opacity:0;
+  transform: translateY(-20px) scale(0.5);
+  transition: opacity 0.5s cubic-bezier(0.22,1,0.36,1),
+              transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.term-letter.show {
+  opacity:1;
+  transform: translateY(0) scale(1);
+}
+.term-letter.glitch {
+  animation: term-glitch 0.25s ease forwards;
+}
+@keyframes term-glitch {
+  0%   { transform: translate(0); text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+  20%  { transform: translate(-2px, 1px); text-shadow: -2px 0 #00ff41, 2px 0 #ff00ff; }
+  40%  { transform: translate(2px, -1px); text-shadow: 2px 0 #00ff41, -2px 0 #ff00ff; }
+  60%  { transform: translate(-1px, 0); }
+  80%  { transform: translate(1px, 0); }
+  100% { transform: translate(0); text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+}
+
+.term-subtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.3em;
+  color: var(--text-mid);
+  margin-top: 0.8rem;
+  opacity:0;
+  transition: opacity 0.8s ease 1.5s;
+}
+.term-subtitle.show { opacity:0.7; }
+
+.term-date {
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.3vw, 0.75rem);
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  margin-top: 0.6rem;
+  opacity:0;
+  transition: opacity 0.8s ease 2s;
+}
+.term-date.show { opacity:0.5; }
+
+.term-click-hint {
+  font-family: var(--font-mono);
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+  color: var(--term-green);
+  margin-top: 2.5rem;
+  opacity:0;
+  transition: opacity 0.8s ease 2.5s;
+  cursor: pointer;
+  padding:0.6rem 1.8rem;
+  border: 1px solid rgba(0,255,65,0.2);
+}
+.term-click-hint.show { opacity:0.8; }
+.term-click-hint:hover {
+  background: rgba(0,255,65,0.05);
+  border-color: rgba(0,255,65,0.5);
+}
+.term-click-hint .blink { animation: blink 1s step-end infinite; }
+
+/* ══════════════════════════════════════════════
+   SCREEN 3 — GAME (Terminal + Lights)
+   ══════════════════════════════════════════════ */
+#screen-game {
+  background: var(--term-bg);
+  overflow:hidden;
+}
+
+#game-terminal-frame {
+  position:absolute; inset: 1.5rem;
+  border: 1px solid rgba(0,255,65,0.08);
+  pointer-events:none;
+  z-index:0;
+}
+#game-terminal-frame::before {
+  content: '│ BIRTHDAY OS v1.0 // LIGHTS MODE │';
+  position:absolute;
+  top: -0.6rem; left: 1.5rem;
+  background: var(--term-bg);
+  padding: 0 0.8rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+  color: rgba(0,255,65,0.2);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+#game-terminal-frame::after {
+  content: '│';
+  position:absolute;
+  bottom: 0.5rem; right: 0.8rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+  color: rgba(0,255,65,0.15);
+  font-family: var(--font-mono);
+}
+
+#particle-canvas {
+  position:absolute; inset:0;
+  pointer-events:none;
+  z-index:1;
+}
+
+#lights-string {
+  position:absolute;
+  top:0; left:0; width:100%; height:100%;
+  z-index:2;
+  pointer-events:none;
+}
+
+#lights-container {
+  position:relative;
+  z-index:3;
+  width:100%;
+  height:100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.fairy-light {
+  position:absolute;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  margin-top: -32px;
+  cursor: pointer;
+  z-index:3;
+  transition: transform 0.3s ease;
+}
+.fairy-light { animation: fairy-flicker 0s ease-in-out infinite; }
+.fairy-light:hover { transform: scale(1.15); }
+.fairy-light.lit { cursor: default; animation: light-pulse 2s ease-in-out infinite; }
+@keyframes light-pulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+@keyframes fairy-flicker {
+  0%, 100% { filter: brightness(1); opacity: 1; }
+  8%  { filter: brightness(0.3); opacity: 0.6; }
+  12% { filter: brightness(1); opacity: 1; }
+  18% { filter: brightness(0.5); opacity: 0.7; }
+  22% { filter: brightness(1); opacity: 1; }
+  48% { filter: brightness(1); opacity: 1; }
+  53% { filter: brightness(0.2); opacity: 0.4; }
+  57% { filter: brightness(1); opacity: 1; }
+  75% { filter: brightness(1); opacity: 1; }
+  80% { filter: brightness(0.6); opacity: 0.7; }
+  83% { filter: brightness(1); opacity: 1; }
+}
+
+.fairy-light .glow {
+  position:absolute;
+  top:50%; left:50%;
+  width:40px; height:40px;
+  margin-left:-20px; margin-top:-20px;
+  border-radius:50%;
+  background: radial-gradient(circle, rgba(255,200,87,0.9) 0%, rgba(255,159,67,0.3) 40%, transparent 70%);
+  box-shadow: 0 0 20px rgba(255,200,87,0.4), 0 0 60px rgba(255,200,87,0.15);
+  transition: all 0.4s ease;
+}
+.fairy-light:hover .glow {
+  box-shadow: 0 0 30px rgba(255,200,87,0.6), 0 0 80px rgba(255,200,87,0.25);
+  transform: scale(1.1);
+}
+.fairy-light.lit .glow {
+  box-shadow: 0 0 40px rgba(255,200,87,0.8), 0 0 100px rgba(255,200,87,0.3);
+}
+
+.fairy-light .light-body {
+  position:absolute;
+  top:50%; left:50%;
+  width:14px; height:20px;
+  margin-left:-7px; margin-top:-10px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 50% 40%, #fff8e0 0%, #ffc857 60%, #e8943a 100%);
+  box-shadow: 0 0 15px rgba(255,200,87,0.6), inset 0 -2px 4px rgba(0,0,0,0.2);
+  transition: all 0.4s ease;
+}
+.fairy-light.lit .light-body {
+  background: radial-gradient(ellipse at 50% 40%, #ffffff 0%, #ffd700 50%, #ffaa00 100%);
+  box-shadow: 0 0 25px rgba(255,215,0,0.8), 0 0 60px rgba(255,200,87,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
+}
+
+.fairy-light .light-cap {
+  position:absolute; top:50%; left:50%;
+  width:10px; height:6px;
+  margin-left:-5px; margin-top:8px;
+  background: #555;
+  border-radius: 2px 2px 1px 1px;
+  z-index:1;
+}
+.fairy-light .wire {
+  position:absolute; top:50%; left:50%;
+  width:2px; height:30px;
+  margin-left:-1px; margin-top:-30px;
+  background: #444;
+  z-index:-1;
+}
+
+.light-message {
+  position:absolute;
+  top:50%; left:50%;
+  transform: translate(-50%, -100%) translateY(-30px);
+  background: rgba(5,5,8,0.95);
+  border: 1px solid rgba(0,255,65,0.2);
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  font-size: clamp(0.65rem, 1.5vw, 0.9rem);
+  color: var(--term-green);
+  white-space: nowrap;
+  opacity:0;
+  pointer-events:none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  box-shadow: 0 0 20px rgba(0,255,65,0.08);
+  z-index:10;
+  font-family: var(--font-mono);
+}
+.light-message.show {
+  opacity:1;
+  transform: translate(-50%, -100%) translateY(-40px);
+}
+.light-message::after {
+  content:'';
+  position:absolute;
+  top:100%; left:50%;
+  margin-left:-5px;
+  border:5px solid transparent;
+  border-top-color: rgba(0,255,65,0.2);
+}
+
+#progress {
+  position:fixed;
+  bottom: 2rem;
+  left:50%;
+  transform: translateX(-50%);
+  z-index:20;
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 1.3vw, 0.8rem);
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  opacity:0;
+  transition: opacity 0.8s ease;
+}
+#progress.show { opacity:0.6; }
+#progress .count { color: var(--term-green); text-shadow: 0 0 6px rgba(0,255,65,0.3); }
+
+/* ══════════════════════════════════════════════
+   SCREEN 4 — FINAL
+   ══════════════════════════════════════════════ */
+#screen-final {
+  background: var(--term-bg);
+  text-align:center;
+  font-family: var(--font-mono);
+}
+
+#final-terminal-border {
+  position:absolute; inset: 1.5rem;
+  border: 1px solid rgba(0,255,65,0.08);
+  pointer-events:none;
+  z-index:0;
+}
+#final-terminal-border::before {
+  content: '│ BIRTHDAY OS v1.0 // FINALIZE │';
+  position:absolute;
+  top: -0.6rem; left: 1.5rem;
+  background: var(--term-bg);
+  padding: 0 0.8rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+  color: rgba(0,255,65,0.2);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+#final-terminal-border::after {
+  content: '│';
+  position:absolute;
+  bottom: 0.5rem; right: 0.8rem;
+  font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+  color: rgba(0,255,65,0.15);
+  font-family: var(--font-mono);
+}
+
+#final-content {
+  position:relative;
+  z-index:5;
+  max-width: 700px;
+  opacity:0;
+  transform: translateY(30px);
+  transition: opacity 1.2s ease, transform 1.2s ease;
+}
+#final-content.show { opacity:1; transform: translateY(0); }
+
+#final-icon {
+  font-size: clamp(3rem, 10vw, 5rem);
+  margin-bottom: 0.8rem;
+  opacity:0;
+  transform: scale(0);
+  transition: opacity 0.8s ease 0.3s, transform 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s;
+}
+#final-icon.show { opacity:1; transform: scale(1); }
+
+#final-headline {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: clamp(1.3rem, 4vw, 2.5rem);
+  letter-spacing: 0.2em;
+  color: var(--term-green);
+  text-shadow: 0 0 15px rgba(0,255,65,0.3);
+  margin-bottom: 1.5rem;
+  opacity:0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s;
+  line-height: 1.4;
+}
+#final-headline.show { opacity:1; transform: translateY(0); }
+
+#final-message {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: clamp(0.7rem, 1.8vw, 1rem);
+  line-height: 1.9;
+  color: rgba(0,255,65,0.8);
+  margin-bottom: 2rem;
+  opacity:0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease 0.9s, transform 0.8s ease 0.9s;
+}
+#final-message.show { opacity:1; transform: translateY(0); }
+#final-message .highlight { color: var(--gold); font-weight: 400; text-shadow: 0 0 8px rgba(255,200,87,0.3); }
+
+#final-signature {
+  font-family: var(--font-mono);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  color: var(--text-mid);
+  letter-spacing: 0.1em;
+  opacity:0;
+  transition: opacity 0.8s ease 1.2s;
+}
+#final-signature.show { opacity:0.7; }
+#final-signature .heart { color: #ff6b9d; text-shadow: 0 0 10px rgba(255,107,157,0.4); }
+
+#confetti-canvas {
+  position:absolute; inset:0;
+  pointer-events:none;
+  z-index:1;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .term-title { letter-spacing: 0.1em; }
+  .light-message { white-space: normal; max-width: 200px; font-size: 0.75rem; }
+  #boot-text { font-size: 0.65rem; }
+  #signal-bar-label { font-size: 0.65rem; }
+  .fairy-light { width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
+  .fairy-light .glow { width: 32px; height: 32px; margin-left: -16px; margin-top: -16px; }
+  .fairy-light .light-body { width: 11px; height: 16px; margin-left: -5.5px; margin-top: -8px; }
+  .fairy-light .light-cap { margin-top: 6px; }
+  #title-border { font-size: 0.4rem; }
+}
+
+.glitch-overlay {
+  position:fixed; inset:0; pointer-events:none; z-index:100;
+  background: rgba(0,255,65,0.02);
+  opacity:0;
+  animation: none;
+}
+.glitch-overlay.active {
+  animation: term-glitch-flash 0.15s ease 3;
+}
+@keyframes term-glitch-flash {
+  0%,100% { opacity:0; }
+  25% { opacity:1; background: rgba(0,255,65,0.02); }
+  50% { opacity:0; }
+  75% { opacity:1; background: rgba(255,0,255,0.02); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ CRT OVERLAY ═══════ -->
+<div id="crt-overlay"></div>
+<div id="glitch-overlay" class="glitch-overlay"></div>
+
+<!-- ═══════ SCREEN 1 — BOOT ═══════ -->
+<div id="screen-boot" class="screen active">
+  <div id="boot-text">
+  </div>
+  <div id="boot-prompt"><span class="blink">▌</span> Drücke eine Taste, um fortzufahren...</div>
+</div>
+
+<!-- ═══════ SCREEN 2 — TITLE ═══════ -->
+<div id="screen-title" class="screen">
+  <div class="title-container">
+    <pre id="title-border">┌─────────────────────────────────────────────────────────┐</pre>
+    <h1 class="term-title">
+      <span class="word"><span class="term-letter">H</span><span class="term-letter">A</span><span class="term-letter">P</span><span class="term-letter">P</span><span class="term-letter">Y</span></span>
+      &nbsp;
+      <span class="word"><span class="term-letter">B</span><span class="term-letter">I</span><span class="term-letter">R</span><span class="term-letter">T</span><span class="term-letter">H</span><span class="term-letter">D</span><span class="term-letter">A</span><span class="term-letter">Y</span></span>
+      &nbsp;
+      <span class="word"><span class="term-letter">S</span><span class="term-letter">O</span><span class="term-letter">P</span><span class="term-letter">H</span><span class="term-letter">I</span><span class="term-letter">E</span></span>
+    </h1>
+    <pre id="title-border" style="margin-top:0.3rem;">└─────────────────────────────────────────────────────────┘</pre>
+    <p class="term-subtitle">✦ BIRTHDAY EDITION ✦</p>
+    <p class="term-date">01. JUNI 2026 // SIGNAL ESTABLISHED</p>
+    <p class="term-click-hint"><span class="blink">▌</span> In die Welt eintreten...</p>
+  </div>
+</div>
+
+<!-- ═══════ SCREEN 3 — GAME ═══════ -->
+<div id="screen-game" class="screen">
+  <div id="game-terminal-frame"></div>
+  <canvas id="particle-canvas"></canvas>
+  <svg id="lights-string" viewBox="0 0 1000 600" preserveAspectRatio="none">
+    <path id="string-path" d="M0,50 Q150,120 250,80 Q400,20 500,100 Q600,180 700,90 Q850,30 1000,70"
+          fill="none" stroke="rgba(0,255,65,0.06)" stroke-width="1.5" />
+  </svg>
+  <div id="lights-container"></div>
+  <div id="progress" class="">> SIGNAL: <span class="count">0</span>/6 LICHTER ENTZÜNDET</div>
+</div>
+
+<!-- ═══════ SCREEN 4 — FINAL ═══════ -->
+<div id="screen-final" class="screen">
+  <div id="final-terminal-border"></div>
+  <canvas id="confetti-canvas"></canvas>
+  <div id="final-content">
+    <div id="final-icon">🌌</div>
+    <div id="final-headline">HAPPY BIRTHDAY</div>
+    <div id="final-message"></div>
+    <div id="final-signature">— <span class="heart">♥</span> Carlo</div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   JAVASCRIPT — GAME LOGIC
+   ═══════════════════════════════════════════════════════════════ */
+
+(function() {
+'use strict';
+
+// ─── CONFIG ───
+const LIGHT_MESSAGES = [
+  { msg: "In einer Welt voller gewöhnlicher Dinge …", emoji: "✨", icon: ">" },
+  { msg: "… hast du deinen ganz eigenen Vibe.", emoji: "🌟", icon: ">" },
+  { msg: "Deine Art zu schreiben? Einfach unvergesslich.", emoji: "🎵", icon: ">" },
+  { msg: "Deine Geschichten? Legen mir immer ein Grinsen ins Gesicht.", emoji: "📖", icon: ">" },
+  { msg: "Einfach: du bist großartig.", emoji: "💫", icon: ">" },
+  { msg: "Alles Gute zum Geburtstag, Sophie! 🎂", emoji: "🎂", icon: ">" },
+];
+
+const FINAL_LINES = [
+  "Sophie,",
+  "",
+  "Ich w\u00fcnsch dir einen richtig sch\u00f6nen Tag.",
+  "<span style=\"font-size:1.4em;\">\uD83C\uDF82\uD83C\uDF0C\u2728</span>"
+];
+
+const BOOT_LINES = [
+  { text: "┌──────────────────────────────────────────┐", delay: 80 },
+  { text: "│  BIRTHDAY OS v1.0.0                    │", delay: 150 },
+  { text: "└──────────────────────────────────────────┘", delay: 120 },
+  { text: "", delay: 60 },
+  { text: "> System initialisieren ...", delay: 250 },
+  { text: "> Zielortung: Sophie", delay: 350 },
+  { text: "> SIGNAL_BAR", delay: 30 },   // triggers animated bar
+  { text: "> Upside Down Gateway ... ONLINE", delay: 300 },
+  { text: "> Birthday Protocol ... geladen", delay: 250 },
+  { text: "", delay: 80 },
+  { text: "> Empfänger: SOPHIE", delay: 200 },
+  { text: "> Absender:  CARLO", delay: 200 },
+  { text: "> Priorität:  MAXIMAL", delay: 150 },
+  { text: "", delay: 100 },
+  { text: "✓ System bereit.", delay: 350 },
+];
+
+// ─── STATE ───
+let currentScreen = 'boot';
+let lightsLit = 0;
+let totalLights = LIGHT_MESSAGES.length;
+let lightElements = [];
+let animFrame = null;
+let particles = [];
+let confetti = [];
+let bgMusicStarted = false;
+let bgMusicNodes = [];
+
+// ─── DOM REFS ───
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const bootText = $('#boot-text');
+const bootPrompt = $('#boot-prompt');
+const signalBarContainer = $('#signal-bar-container');
+const signalBarFill = $('#signal-bar-fill');
+const signalBarPct = $('#signal-bar-pct');
+const screenTitle = $('#screen-title');
+const screenGame = $('#screen-game');
+const screenFinal = $('#screen-final');
+const titleLetters = $$('.term-letter');
+const subtitle = $('.term-subtitle');
+const termDate = $('.term-date');
+const clickHint = $('.term-click-hint');
+const titleBorder = $$('#title-border');
+const lightsContainer = $('#lights-container');
+const progress = $('#progress');
+const progressCount = progress.querySelector('.count');
+const particleCanvas = $('#particle-canvas');
+const confettiCanvas = $('#confetti-canvas');
+const finalContent = $('#final-content');
+const finalIcon = $('#final-icon');
+const finalHeadline = $('#final-headline');
+const finalMessage = $('#final-message');
+const finalSignature = $('#final-signature');
+const glitchOverlay = $('#glitch-overlay');
+const stringPath = $('#string-path');
+const screenBoot = $('#screen-boot');
+
+// ─── WEB AUDIO — SFX ───
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+function playNote(freq, duration, type, gainVal) {
+  try {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(gainVal || 0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) { /* silent fallback */ }
+}
+function playChime() {
+  playNote(523.25, 0.15, 'sine', 0.12);
+  setTimeout(() => playNote(659.25, 0.15, 'sine', 0.10), 100);
+  setTimeout(() => playNote(783.99, 0.3, 'sine', 0.10), 200);
+}
+function playReveal() {
+  const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880];
+  notes.forEach((f, i) => {
+    setTimeout(() => playNote(f, 0.2, 'sine', 0.08), i * 80);
+  });
+  setTimeout(() => playNote(1046.5, 0.5, 'sine', 0.12), notes.length * 80);
+}
+function playGlitch() {
+  playNote(80, 0.05, 'sawtooth', 0.05);
+  setTimeout(() => playNote(120, 0.05, 'sawtooth', 0.04), 50);
+}
+
+// ─── BACKGROUND MUSIC — Creepy Melodic Drone ───
+function startBackgroundMusic() {
+  if (bgMusicStarted) return;
+  bgMusicStarted = true;
+  initAudio();
+  if (!audioCtx) return;
+
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  masterGain.connect(audioCtx.destination);
+
+  // ── Drone 1: Low ominous C ──
+  const drone1 = audioCtx.createOscillator();
+  drone1.type = 'sine';
+  drone1.frequency.setValueAtTime(65.41, audioCtx.currentTime); // C2
+  const drone1Gain = audioCtx.createGain();
+  drone1Gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+  drone1.connect(drone1Gain);
+  drone1Gain.connect(masterGain);
+
+  // ── Drone 2: Detuned for beat frequency creep ──
+  const drone2 = audioCtx.createOscillator();
+  drone2.type = 'sine';
+  drone2.frequency.setValueAtTime(66.0, audioCtx.currentTime); // slightly detuned
+  const drone2Gain = audioCtx.createGain();
+  drone2Gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  drone2.connect(drone2Gain);
+  drone2Gain.connect(masterGain);
+
+  // ── Drone 3: Fifth above ──
+  const drone3 = audioCtx.createOscillator();
+  drone3.type = 'sine';
+  drone3.frequency.setValueAtTime(98.0, audioCtx.currentTime); // G2
+  const drone3Gain = audioCtx.createGain();
+  drone3Gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  drone3.connect(drone3Gain);
+  drone3Gain.connect(masterGain);
+
+  // ── LFO modulation on drone 1 ──
+  const lfo = audioCtx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.setValueAtTime(0.15, audioCtx.currentTime); // very slow
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.setValueAtTime(3, audioCtx.currentTime);
+  lfo.connect(lfoGain);
+  lfoGain.connect(drone1.frequency);
+
+  // ── Subtle filter sweep ──
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+  filter.Q.setValueAtTime(1, audioCtx.currentTime);
+  const filterLfo = audioCtx.createOscillator();
+  filterLfo.type = 'sine';
+  filterLfo.frequency.setValueAtTime(0.08, audioCtx.currentTime);
+  const filterLfoGain = audioCtx.createGain();
+  filterLfoGain.gain.setValueAtTime(150, audioCtx.currentTime);
+  filterLfo.connect(filterLfoGain);
+  filterLfoGain.connect(filter.frequency);
+
+  // Reconnect drones through filter
+  drone1.disconnect(drone1Gain);
+  drone2.disconnect(drone2Gain);
+  drone3.disconnect(drone3Gain);
+  drone1.connect(filter);
+  drone2.connect(filter);
+  drone3.connect(filter);
+  filter.connect(drone1Gain);
+
+  // ── Sparse melodic notes (creepy whole tone / minor scale) ──
+  const creepyNotes = [
+    261.63, 277.18, 293.66, 311.13, 349.23, 369.99, 415.30, 440,
+    523.25, 554.37, 587.33, 622.25, 698.46, 739.99, 830.61, 880
+  ];
+
+  function scheduleMelody() {
+    if (currentScreen === 'final') {
+      // On final screen, play happier notes
+      const happyNotes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 1046.5];
+      const freq = happyNotes[Math.floor(Math.random() * happyNotes.length)];
+      const noteGain = audioCtx.createGain();
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
+      noteGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.5);
+      noteGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3);
+      osc.connect(noteGain);
+      noteGain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 3.5);
+      const delay = 2000 + Math.random() * 3000;
+      setTimeout(scheduleMelody, delay);
+      return;
+    }
+
+    // Creepy mode: play random notes from the creepy scale
+    const freq = creepyNotes[Math.floor(Math.random() * creepyNotes.length)];
+    const now = audioCtx.currentTime;
+    const delaySec = 2 + Math.random() * 4;
+    const startTime = now + delaySec;
+
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.025, startTime + 0.4);
+    gain.gain.linearRampToValueAtTime(0, startTime + 2.5);
+
+    // Random slight detune for eeriness
+    if (Math.random() < 0.3) {
+      osc.frequency.linearRampToValueAtTime(freq * (1 + (Math.random()-0.5)*0.02), startTime + 1.5);
+    }
+
+    // Sometimes play a two-note chord
+    if (Math.random() < 0.2) {
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        osc2.type = 'sine';
+        const freq2 = creepyNotes[Math.floor(Math.random() * creepyNotes.length)];
+        osc2.frequency.setValueAtTime(freq2, audioCtx.currentTime);
+        const gain2 = audioCtx.createGain();
+        gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain2.gain.linearRampToValueAtTime(0.015, audioCtx.currentTime + 0.5);
+        gain2.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 2.5);
+      }, (delaySec + 0.3) * 1000);
+    }
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + 3);
+
+    setTimeout(scheduleMelody, delaySec * 1000);
+  }
+
+  // Start nodes
+  drone1.start();
+  drone2.start();
+  drone3.start();
+  lfo.start();
+  filterLfo.start();
+
+  // Start melody after a short delay
+  setTimeout(scheduleMelody, 2000);
+
+  // Store references for cleanup
+  bgMusicNodes = [drone1, drone2, drone3, lfo, filterLfo];
+}
+
+function tryStartBgMusic() {
+  // Called on any user interaction — browser policy requires
+  // AudioContext resume / creation on user gesture
+  if (!bgMusicStarted) {
+    startBackgroundMusic();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// ─── SCREEN MANAGEMENT ───
+function showScreen(id) {
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+  currentScreen = id;
+}
+
+function triggerGlitch() {
+  glitchOverlay.classList.remove('active');
+  void glitchOverlay.offsetWidth;
+  glitchOverlay.classList.add('active');
+  playGlitch();
+  setTimeout(() => glitchOverlay.classList.remove('active'), 500);
+}
+
+// ─── SIGNAL STRENGTH BAR ───
+function animateSignalBar(onComplete) {
+  const container = document.createElement('div');
+  container.className = 'line visible';
+  container.style.width = '100%';
+  container.style.margin = '3px 0 3px 0';
+
+  const label = document.createElement('div');
+  label.style.cssText = 'font-size:clamp(0.75rem,2.2vw,1.1rem);color:var(--term-green);text-shadow:0 0 8px rgba(0,255,65,0.25);line-height:1.8;';
+  label.textContent = '> Signalstärke: 0%';
+
+  const track = document.createElement('div');
+  track.style.cssText = 'width:100%;height:18px;background:rgba(0,255,65,0.08);border:1px solid rgba(0,255,65,0.25);border-radius:2px;position:relative;overflow:hidden;margin-top:2px;';
+
+  const fill = document.createElement('div');
+  fill.style.cssText = 'height:100%;width:0%;background:linear-gradient(90deg,rgba(0,255,65,0.4),#00ff41);position:relative;transition:width 0.15s linear;';
+
+  const pctSpan = document.createElement('span');
+  pctSpan.style.cssText = 'position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:0.7em;color:#000;font-weight:bold;font-family:var(--font-mono);mix-blend-mode:difference;';
+  pctSpan.textContent = '0%';
+
+  fill.appendChild(pctSpan);
+  track.appendChild(fill);
+  container.appendChild(label);
+  container.appendChild(track);
+  bootText.appendChild(container);
+
+  let progress = 0;
+  const duration = 2500;
+  const step = 30;
+  const increment = 100 / (duration / step);
+
+  function tick() {
+    progress = Math.min(100, progress + increment);
+    fill.style.width = progress + '%';
+    pctSpan.textContent = Math.round(progress) + '%';
+    label.textContent = '> Signalstärke: ' + Math.round(progress) + '%';
+
+    if (progress === 33) playNote(300, 0.05, 'sine', 0.03);
+    if (progress === 66) playNote(400, 0.05, 'sine', 0.03);
+    if (progress === 100) {
+      playNote(523.25, 0.1, 'sine', 0.05);
+      fill.style.boxShadow = '0 0 20px rgba(0,255,65,0.5)';
+    }
+
+    if (progress < 100) {
+      setTimeout(tick, step);
+    } else {
+      if (onComplete) setTimeout(onComplete, 200);
+    }
+  }
+  tick();
+}
+
+// ─── BOOT SCREEN ───
+let bootSignalBarDone = false;
+
+function bootSequence() {
+  let lineIdx = 0;
+  let charIdx = 0;
+  let currentLineEl = null;
+  let isComplete = false;
+
+  function addLine() {
+    if (lineIdx >= BOOT_LINES.length) {
+      if (bootSignalBarDone) {
+        isComplete = true;
+        bootPrompt.classList.add('show');
+      }
+      return;
+    }
+    const lineData = BOOT_LINES[lineIdx];
+
+    // Special marker for signal bar
+    if (lineData.text === '> SIGNAL_BAR') {
+      animateSignalBar(() => {
+        bootSignalBarDone = true;
+        if (lineIdx >= BOOT_LINES.length) {
+          isComplete = true;
+          bootPrompt.classList.add('show');
+        } else {
+          addLine();
+        }
+      });
+      lineIdx++;
+      return;
+    }
+
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'line';
+    bootText.appendChild(lineDiv);
+    currentLineEl = lineDiv;
+
+    if (lineData.text === '') {
+      lineDiv.innerHTML = '&nbsp;';
+      lineDiv.classList.add('visible');
+      lineIdx++;
+      setTimeout(addLine, lineData.delay);
+      return;
+    }
+
+    charIdx = 0;
+    typeChar();
+  }
+
+  function typeChar() {
+    if (!currentLineEl) return;
+    const text = BOOT_LINES[lineIdx].text;
+    if (charIdx < text.length) {
+      if (charIdx === 0) currentLineEl.classList.add('visible');
+      currentLineEl.textContent += text[charIdx];
+      charIdx++;
+      const speed = text[charIdx-1] === ' ' ? 25 : 15 + Math.random() * 20;
+      setTimeout(typeChar, speed);
+    } else {
+      lineIdx++;
+      setTimeout(addLine, BOOT_LINES[lineIdx] ? BOOT_LINES[lineIdx].delay : 200);
+    }
+  }
+
+  addLine();
+
+  // Keyboard/touch skip
+  function skipBoot(e) {
+    if (!isComplete) return;
+    e.preventDefault();
+    tryStartBgMusic();  // Start bg music on first user interaction
+    bootPrompt.removeEventListener('click', skipBoot);
+    document.removeEventListener('keydown', skipBoot);
+    transitionToTitle();
+  }
+  bootPrompt.addEventListener('click', skipBoot);
+  document.addEventListener('keydown', skipBoot);
+}
+
+// ─── TRANSITION: BOOT → TITLE ───
+function transitionToTitle() {
+  triggerGlitch();
+  showScreen('title');
+  animateTitle();
+}
+
+// ─── TITLE SCREEN ───
+function animateTitle() {
+  titleBorder.forEach(el => el.classList.add('show'));
+
+  titleLetters.forEach((letter, i) => {
+    setTimeout(() => {
+      letter.classList.add('show');
+      if (i % 3 === 0) playNote(200 + i * 20, 0.08, 'sine', 0.03);
+      if (Math.random() < 0.2) {
+        setTimeout(() => {
+          letter.classList.add('glitch');
+          setTimeout(() => letter.classList.remove('glitch'), 300);
+        }, 600);
+      }
+    }, 200 + i * 100);
+  });
+
+  const totalDelay = 200 + titleLetters.length * 100;
+  setTimeout(() => subtitle.classList.add('show'), totalDelay + 300);
+  setTimeout(() => termDate.classList.add('show'), totalDelay + 600);
+  setTimeout(() => clickHint.classList.add('show'), totalDelay + 900);
+
+  function goToGame(e) {
+    e.preventDefault();
+    clickHint.removeEventListener('click', goToGame);
+    document.removeEventListener('keydown', goToGame);
+    transitionToGame();
+  }
+  clickHint.addEventListener('click', goToGame);
+  document.addEventListener('keydown', goToGame);
+}
+
+// ─── TRANSITION: TITLE → GAME ───
+function transitionToGame() {
+  triggerGlitch();
+  showScreen('game');
+  setTimeout(() => {
+    progress.classList.add('show');
+    initGame();
+  }, 500);
+}
+
+// ─── PARTICLE SYSTEM ───
+function initParticles(canvas) {
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = canvas.width = canvas.parentElement.clientWidth;
+    h = canvas.height = canvas.parentElement.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particleList = [];
+  const count = 60;
+
+  for (let i = 0; i < count; i++) {
+    particleList.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: -(0.05 + Math.random() * 0.15),
+      size: 0.5 + Math.random() * 1.5,
+      alpha: 0.1 + Math.random() * 0.3,
+      pulseSpeed: 0.005 + Math.random() * 0.01,
+      pulsePhase: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    const time = Date.now();
+
+    particleList.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+      if (p.x < -10 || p.x > w + 10) { p.x = Math.random() * w; p.y = Math.random() * h * 0.5; }
+
+      const pulse = 0.5 + 0.5 * Math.sin(time * p.pulseSpeed + p.pulsePhase);
+      const alpha = p.alpha * pulse;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,255,65,${alpha * 0.2})`;
+      ctx.fill();
+
+      if (p.size > 1) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,255,65,${alpha * 0.03})`;
+        ctx.fill();
+      }
+    });
+
+    animFrame = requestAnimationFrame(animate);
+  }
+
+  animate();
+  return () => { cancelAnimationFrame(animFrame); };
+}
+
+// ─── GAME: FAIRY LIGHTS ───
+function initGame() {
+  initParticles(particleCanvas);
+
+  const container = lightsContainer;
+  const cw = container.clientWidth || 900;
+  const ch = container.clientHeight || 600;
+
+  const positions = [];
+  const margin = 80;
+  const usableW = cw - margin * 2;
+  const usableH = ch - margin * 2;
+
+  for (let i = 0; i < totalLights; i++) {
+    const t = i / (totalLights - 1);
+    const x = margin + t * usableW;
+    const arc = Math.sin(t * Math.PI) * 0.35;
+    const y = margin + usableH * (0.3 + arc * 0.4);
+    positions.push({ x, y });
+  }
+
+  let pathD = `M${positions[0].x},${positions[0].y}`;
+  if (positions.length === 6) {
+    pathD = `M${positions[0].x},${positions[0].y}
+             Q${(positions[0].x+positions[1].x)/2},${(positions[0].y+positions[1].y)/2 - 20}
+               ${positions[1].x},${positions[1].y}
+             Q${(positions[1].x+positions[2].x)/2},${(positions[1].y+positions[2].y)/2 - 15}
+               ${positions[2].x},${positions[2].y}
+             Q${(positions[2].x+positions[3].x)/2},${(positions[2].y+positions[3].y)/2 - 10}
+               ${positions[3].x},${positions[3].y}
+             Q${(positions[3].x+positions[4].x)/2},${(positions[3].y+positions[4].y)/2 - 15}
+               ${positions[4].x},${positions[4].y}
+             Q${(positions[4].x+positions[5].x)/2},${(positions[4].y+positions[5].y)/2 - 20}
+               ${positions[5].x},${positions[5].y}`;
+  }
+  stringPath.setAttribute('d', pathD);
+
+  LIGHT_MESSAGES.forEach((data, i) => {
+    const pos = positions[i];
+    const el = document.createElement('div');
+    el.className = 'fairy-light';
+    el.style.animationDuration = (2 + Math.random() * 5) + 's';
+    el.style.animationDelay = (Math.random() * 4) + 's';
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+    el.dataset.index = i;
+    el.setAttribute('aria-label', `Fairy light ${i+1}`);
+
+    el.innerHTML = `
+      <div class="glow"></div>
+      <div class="wire"></div>
+      <div class="light-body"></div>
+      <div class="light-cap"></div>
+      <div class="light-message">${data.icon} ${data.msg}</div>
+    `;
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      lightUp(el, i);
+    });
+    el.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      lightUp(el, i);
+    });
+
+    container.appendChild(el);
+    lightElements.push(el);
+
+    el.style.opacity = '0';
+    el.style.transform = 'scale(0)';
+    setTimeout(() => {
+      el.style.transition = 'opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)';
+      el.style.opacity = '1';
+      el.style.transform = 'scale(1)';
+    }, 300 + i * 200);
+  });
+}
+
+let gameComplete = false;
+
+function lightUp(el, index) {
+  if (el.classList.contains('lit') || gameComplete) return;
+
+  el.classList.add('lit');
+  lightsLit++;
+  progressCount.textContent = lightsLit;
+
+  const msg = el.querySelector('.light-message');
+  msg.classList.add('show');
+  playChime();
+  triggerGlitch();
+
+  if (lightsLit >= totalLights) {
+    gameComplete = true;
+    setTimeout(transitionToFinal, 1500);
+  }
+}
+
+// ─── TRANSITION: GAME → FINAL ───
+function transitionToFinal() {
+  playReveal();
+  triggerGlitch();
+
+  lightElements.forEach(el => {
+    el.style.transition = 'filter 0.3s ease';
+    el.style.filter = 'brightness(2)';
+    setTimeout(() => { el.style.filter = 'brightness(1)'; }, 300);
+  });
+
+  showScreen('final');
+  animateFinal();
+}
+
+// ─── FINAL SCREEN ───
+function animateFinal() {
+  initConfetti();
+
+  setTimeout(() => finalContent.classList.add('show'), 200);
+  setTimeout(() => finalIcon.classList.add('show'), 600);
+  setTimeout(() => finalHeadline.classList.add('show'), 1000);
+
+  setTimeout(() => {
+    finalMessage.classList.add('show');
+    typeFinalMessage();
+  }, 1400);
+
+  setTimeout(() => finalSignature.classList.add('show'), 2800);
+}
+
+function typeFinalMessage() {
+  finalMessage.innerHTML = FINAL_LINES.map(line => {
+    if (line === '') return '<br>';
+    return `<div style="margin-bottom:0.3rem;">${line}</div>`;
+  }).join('');
+  finalMessage.style.opacity = '0';
+  finalMessage.style.transition = 'opacity 1.2s ease';
+  setTimeout(() => { finalMessage.style.opacity = '1'; }, 100);
+}
+
+// ─── CONFETTI ───
+function initConfetti() {
+  const canvas = confettiCanvas;
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = canvas.width = canvas.parentElement.clientWidth;
+    h = canvas.height = canvas.parentElement.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const items = [];
+  const colors = ['#00ff41', '#ff6b9d', '#ffc857', '#2dd4bf', '#ff9f43', '#a855f7', '#60a5fa'];
+  const count = 150;
+
+  for (let i = 0; i < count; i++) {
+    items.push({
+      x: Math.random() * w,
+      y: Math.random() * h - h,
+      w: 4 + Math.random() * 8,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vy: 0.5 + Math.random() * 1.5,
+      vx: (Math.random() - 0.5) * 0.5,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.02,
+      opacity: 0.6 + Math.random() * 0.4,
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    items.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx;
+      p.rotation += p.rotSpeed;
+
+      if (p.y > h + 20) {
+        p.y = -20;
+        p.x = Math.random() * w;
+      }
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.globalAlpha = p.opacity;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// ─── Also start bg music on any click/touch anywhere ───
+document.addEventListener('click', tryStartBgMusic, { once: true });
+document.addEventListener('touchstart', tryStartBgMusic, { once: true });
+
+// ─── INIT ───
+window.addEventListener('load', () => {
+  bootSequence();
+});
+
+})();
+</script>
+</body>
+</html>
