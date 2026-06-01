@@ -1514,29 +1514,26 @@ function initUpsideDownParticles() {
   resize();
   window.addEventListener('resize', resize);
 
-  const PARTICLES = 80;
+  const PARTICLES = 40;
   const particles = [];
 
   for (let i = 0; i < PARTICLES; i++) {
     particles.push({
       x: Math.random() * w,
-      y: Math.random() * h * -1, // start above screen
-      size: 2 + Math.random() * 4,
-      speed: 0.3 + Math.random() * 0.8,
-      drift: (Math.random() - 0.5) * 0.3,
-      opacity: 0.15 + Math.random() * 0.4,
-      hue: Math.random() > 0.5 ? 0 : 20 // red or warm gray
+      y: Math.random() * h * -1,
+      size: 1.5 + Math.random() * 2.5,
+      speed: 0.2 + Math.random() * 0.6,
+      drift: (Math.random() - 0.5) * 0.4,
+      opacity: 0.04 + Math.random() * 0.12,
+      hue: 30 + Math.random() * 20 // warm dusty gray/brown, kein rot
     });
   }
 
   function drawParticle(p) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${p.hue}, 80%, ${p.hue === 0 ? 45 : 55}%, ${p.opacity})`;
+    ctx.fillStyle = `hsla(${p.hue}, 30%, 55%, ${p.opacity})`;
     ctx.fill();
-    // soft glow
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = `hsla(${p.hue}, 80%, 50%, ${p.opacity * 0.3})`;
   }
 
   let frame = 0;
@@ -1546,9 +1543,8 @@ function initUpsideDownParticles() {
 
     particles.forEach(p => {
       p.y += p.speed;
-      p.x += p.drift + Math.sin(frame * 0.01 + p.x * 0.01) * 0.2;
-      // gentle opacity flicker
-      p.opacity = 0.15 + 0.3 * (0.5 + 0.5 * Math.sin(frame * 0.005 + p.x));
+      p.x += p.drift + Math.sin(frame * 0.008 + p.x * 0.015) * 0.15;
+      p.opacity = 0.04 + 0.1 * (0.5 + 0.5 * Math.sin(frame * 0.003 + p.x));
 
       if (p.y > h + 10) {
         p.y = -10;
