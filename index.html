@@ -356,6 +356,15 @@ html, body {
 .fairy-light { animation: fairy-flicker 0s ease-in-out infinite; }
 .fairy-light:hover { transform: scale(1.15); }
 .fairy-light.lit { cursor: default; animation: light-pulse 2s ease-in-out infinite; }
+.fairy-light.locked { animation: lock-shake 0.4s ease; cursor: not-allowed; }
+@keyframes lock-shake {
+  0%,100% { transform: translateX(0); filter: brightness(1); }
+  15%  { transform: translateX(-4px); filter: brightness(0.6); }
+  30%  { transform: translateX(4px);  filter: brightness(0.6); }
+  45%  { transform: translateX(-2px); filter: brightness(0.8); }
+  60%  { transform: translateX(2px);  filter: brightness(0.8); }
+  75%  { transform: translateX(-1px); filter: brightness(1); }
+}
 @keyframes light-pulse {
   0%,100% { filter: brightness(1); }
   50% { filter: brightness(1.3); }
@@ -423,36 +432,6 @@ html, body {
   z-index:-1;
 }
 
-.light-message {
-  position:absolute;
-  top:50%; left:50%;
-  transform: translate(-50%, -100%) translateY(-30px);
-  background: rgba(5,5,8,0.95);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 4px;
-  padding: 0.6rem 1rem;
-  font-size: clamp(0.65rem, 1.5vw, 0.9rem);
-  color: var(--term-green);
-  white-space: nowrap;
-  opacity:0;
-  pointer-events:none;
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  box-shadow: 0 0 20px rgba(0,255,65,0.08);
-  z-index:10;
-  font-family: var(--font-mono);
-}
-.light-message.show {
-  opacity:1;
-  transform: translate(-50%, -100%) translateY(-40px);
-}
-.light-message::after {
-  content:'';
-  position:absolute;
-  top:100%; left:50%;
-  margin-left:-5px;
-  border:5px solid transparent;
-  border-top-color: rgba(0,255,65,0.2);
-}
 
 #progress {
   position:fixed;
@@ -469,6 +448,38 @@ html, body {
 }
 #progress.show { opacity:0.6; }
 #progress .count { color: var(--term-green); text-shadow: 0 0 6px rgba(0,255,65,0.3); }
+
+#light-msgs {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(85vw, 500px);
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.6rem 0.8rem;
+  background: rgba(5,5,8,0.9);
+  border: 1px solid rgba(0,255,65,0.12);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 1.3vw, 0.8rem);
+  color: var(--term-green);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,255,65,0.2) transparent;
+  pointer-events: none;
+}
+#light-msgs .msg-entry {
+  opacity: 0;
+  animation: msgFadeIn 0.4s ease forwards;
+  line-height: 1.5;
+}
+@keyframes msgFadeIn {
+  to { opacity: 0.85; }
+}
 
 /* ══════════════════════════════════════════════
    SCREEN 4 — FINAL
@@ -580,7 +591,6 @@ html, body {
   .term-date { font-size: clamp(0.45rem, 1.1vw, 0.65rem); }
   .term-sound-hint { font-size: clamp(0.4rem, 1vw, 0.55rem); }
   .term-click-hint { font-size: clamp(0.6rem, 1.3vw, 0.8rem); margin-top: 1.5rem; padding:0.5rem 1.2rem; }
-  .light-message { white-space: normal; max-width: 200px; font-size: 0.75rem; }
   #boot-text { font-size: 0.65rem; }
   #signal-bar-label { font-size: 0.65rem; }
   .fairy-light { width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
@@ -709,6 +719,7 @@ html, body {
   </svg>
   <div id="lights-container"></div>
   <div id="progress" class="">> SIGNAL: <span class="count">0</span>/6 LICHTER ENTZÜNDET</div>
+  <div id="light-msgs"></div>
 </div>
 
 <!-- ═══════ SCREEN 4 — FINAL ═══════ -->
@@ -1304,7 +1315,6 @@ function initGame() {
       <div class="wire"></div>
       <div class="light-body"></div>
       <div class="light-cap"></div>
-      <div class="light-message">${data.icon} ${data.msg}</div>
     `;
 
     el.addEventListener('click', (e) => {
@@ -1334,12 +1344,24 @@ let gameComplete = false;
 function lightUp(el, index) {
   if (el.classList.contains('lit') || gameComplete) return;
 
+  // Left-to-right: only the next light in sequence can be lit
+  if (index !== lightsLit) {
+    el.classList.add('locked');
+    setTimeout(() => el.classList.remove('locked'), 500);
+    return;
+  }
+
   el.classList.add('lit');
   lightsLit++;
   progressCount.textContent = lightsLit;
 
-  const msg = el.querySelector('.light-message');
-  msg.classList.add('show');
+  const msgLog = $('#light-msgs');
+  const entry = document.createElement('div');
+  entry.className = 'msg-entry';
+  entry.textContent = '> ' + LIGHT_MESSAGES[index].icon + ' ' + LIGHT_MESSAGES[index].msg;
+  msgLog.appendChild(entry);
+  msgLog.scrollTop = msgLog.scrollHeight;
+
   playChime();
   triggerGlitch();
 
