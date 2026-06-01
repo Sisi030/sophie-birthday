@@ -680,6 +680,14 @@ html, body {
   background: #00ff41;
   box-shadow: 0 0 15px rgba(0,255,65,0.3);
 }
+
+/* ═══════════ UPSIDE DOWN PARTICLES ═══════════ */
+#upside-down-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
 </style>
 </head>
 <body>
@@ -1489,9 +1497,73 @@ document.addEventListener('touchstart', tryStartBgMusic, { once: true });
 // ─── INIT ───
 window.addEventListener('load', () => {
   soundHintPopup.classList.add('show');
+  initUpsideDownParticles();
 });
+
+// ─── UPSIDE DOWN PARTICLES ───
+function initUpsideDownParticles() {
+  const canvas = document.getElementById('upside-down-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const PARTICLES = 80;
+  const particles = [];
+
+  for (let i = 0; i < PARTICLES; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h * -1, // start above screen
+      size: 2 + Math.random() * 4,
+      speed: 0.3 + Math.random() * 0.8,
+      drift: (Math.random() - 0.5) * 0.3,
+      opacity: 0.15 + Math.random() * 0.4,
+      hue: Math.random() > 0.5 ? 0 : 20 // red or warm gray
+    });
+  }
+
+  function drawParticle(p) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${p.hue}, 80%, ${p.hue === 0 ? 45 : 55}%, ${p.opacity})`;
+    ctx.fill();
+    // soft glow
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = `hsla(${p.hue}, 80%, 50%, ${p.opacity * 0.3})`;
+  }
+
+  let frame = 0;
+  function animateParticles() {
+    ctx.clearRect(0, 0, w, h);
+    frame++;
+
+    particles.forEach(p => {
+      p.y += p.speed;
+      p.x += p.drift + Math.sin(frame * 0.01 + p.x * 0.01) * 0.2;
+      // gentle opacity flicker
+      p.opacity = 0.15 + 0.3 * (0.5 + 0.5 * Math.sin(frame * 0.005 + p.x));
+
+      if (p.y > h + 10) {
+        p.y = -10;
+        p.x = Math.random() * w;
+      }
+      drawParticle(p);
+    });
+
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+}
 
 })();
 </script>
+<canvas id="upside-down-canvas"></canvas>
 </body>
 </html>
